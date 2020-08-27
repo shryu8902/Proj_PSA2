@@ -62,11 +62,7 @@ with open('D:/ie_diagnosis/SCALERS.pickle','wb') as f:
 #%%
 TRAIN_MSLB = sorted(glob.glob('D:/ie_diagnosis/DATA/TRAIN/MSLB/*'))
 TRAIN_SGTR = sorted(glob.glob('D:/ie_diagnosis/DATA/TRAIN/SGTR/*'))
-10040351412
-SGTR = 
+SGTR = []
 for i, file in tqdm.tqdm(enumerate(TRAIN_SGTR)):
-    temp = np.load(file)
-    if i==0:
-        SGTR = temp
-    else:
-        SGTR = np.concatenate[]
+    temp = np.load(file)[::5,:]
+    SGTR.append(temp)
