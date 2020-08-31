@@ -8,26 +8,21 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 #%%
+# Read configurations
 cfg=cfg()
 cfg.read('./PSA.conf')
 WINDOW=int(cfg['MAIN']['WINDOW'])
 STRIDE=int(cfg['MAIN']['STRIDE'])
 SAMPLING_RATE=int(cfg['MAIN']['SAMPLING_RATE'])
 SEED=0
-#%%
-INPUT = np.load('D:/ie_diagnosis/input_ie.npy')
-OUTPUT_ie = np.load('D:/ie_diagnosis/output_ie.npy')
-OUTPUT_MSLB = np.load('./DATA/RAW/output_MSLB.npy')
-OUTPUT_SGTR = np.load('./DATA/RAW/output_SGTR.npy')
 
-#%%
-Input = pd.DataFrame(INPUT)
-Input['Class']= Input[0]<=99999
-# %%
+#%% 
+# Code for converting to pickle files
+# Data are already saved in external HDD
 # MSLB_list = sorted([os.path.basename(x) for x in glob.glob('D:/ie_diagnosis/MSLB_csv/*.csv')])
 # SGTR_list = sorted([os.path.basename(x) for x in glob.glob('D:/ie_diagnosis/SGTR_csv/*.csv')])
-MSLB_list = sorted(glob.glob('D:/ie_diagnosis/MSLB_csv/*.csv'))
-SGTR_list = sorted(glob.glob('D:/ie_diagnosis/SGTR_csv/*.csv'))
+MSLB_list = sorted(glob.glob('F:/ie_diagnosis/MSLB_csv/*.csv'))
+SGTR_list = sorted(glob.glob('F:/ie_diagnosis/SGTR_csv/*.csv'))
 All_list = MSLB_list + SGTR_list
 ClassLabel = np.concatenate([np.ones(np.shape(MSLB_list)),np.zeros(np.shape(SGTR_list))]) # 1 : MSLB, 0 : SGTR
 
@@ -45,24 +40,51 @@ for file in tqdm.tqdm(All_list):
     SCALERS['minmax'].partial_fit(temp2)
     if file in Train_list:
         if 'MSLB' in file:
-            save_root = 'D:/ie_diagnosis/DATA/Train/MSLB/'
+            save_root = 'F:/ie_diagnosis/DATA/Train/MSLB/'
         else:
-            save_root = 'D:/ie_diagnosis/DATA/Train/SGTR/'
+            save_root = 'F:/ie_diagnosis/DATA/Train/SGTR/'
     elif file in Test_list:
         if 'MSLB' in file:
-            save_root = 'D:/ie_diagnosis/DATA/Test/MSLB/'
+            save_root = 'F:/ie_diagnosis/DATA/Test/MSLB/'
         else:
-            save_root = 'D:/ie_diagnosis/DATA/Test/SGTR/'
+            save_root = 'F:/ie_diagnosis/DATA/Test/SGTR/'
     filename = os.path.basename(file).replace('.csv','')
     np.save(save_root+filename, temp2)
 
-with open('D:/ie_diagnosis/SCALERS.pickle','wb') as f:
+with open('F:/ie_diagnosis/SCALERS.pickle','wb') as f:
     pickle.dump(SCALERS,f)
-
-#%%
-TRAIN_MSLB = sorted(glob.glob('D:/ie_diagnosis/DATA/TRAIN/MSLB/*'))
-TRAIN_SGTR = sorted(glob.glob('D:/ie_diagnosis/DATA/TRAIN/SGTR/*'))
+#%% 
+# Below codes are used for creating train/test data
+TRAIN_MSLB = sorted(glob.glob('F:/ie_diagnosis/DATA/TRAIN/MSLB/*'))
+TRAIN_SGTR = sorted(glob.glob('F:/ie_diagnosis/DATA/TRAIN/SGTR/*'))
 SGTR = []
 for i, file in tqdm.tqdm(enumerate(TRAIN_SGTR)):
-    temp = np.load(file)[::5,:]
+    temp = np.load(file)[:3600:5,:]
     SGTR.append(temp)
+SGTR = np.array(SGTR)
+
+MSLB = []
+for i, file in tqdm.tqdm(enumerate(TRAIN_MSLB)):
+    temp = np.load(file)[:3600:5,:]
+    MSLB.append(temp)
+MSLB = np.array(MSLB)
+np.savez('./DATA/Train_minmax',MSLB=MSLB,SGTR=SGTR)
+
+#%%
+TEST_MSLB = sorted(glob.glob('F:/ie_diagnosis/DATA/TEST/MSLB/*'))
+TEST_SGTR = sorted(glob.glob('F:/ie_diagnosis/DATA/TEST/SGTR/*'))
+SGTR = []
+for i, file in tqdm.tqdm(enumerate(TEST_SGTR)):
+    temp = np.load(file)[:3600:5,:]
+    SGTR.append(temp)
+SGTR = np.array(SGTR)
+
+MSLB = []
+for i, file in tqdm.tqdm(enumerate(TEST_MSLB)):
+    temp = np.load(file)[:3600:5,:]
+    MSLB.append(temp)
+MSLB = np.array(MSLB)
+np.savez('./DATA/Test',MSLB=MSLB,SGTR=SGTR)
+#%%
+TRAIN=np.load('./DATA/Train.npz')
+TEST = np.load('./DATA/Test.npz')
