@@ -9,8 +9,8 @@ def reformulator(X):
         X_reform.append(np.concatenate([x_mean,x_std]))
     return(np.array(X_reform))    
 #%%
-TRAIN_feat = reformulator(TRAIN)
-TEST_feat = reformulator(TEST)
+TRAIN_feat = reformulator(TRAIN2)
+TEST_feat = reformulator(TEST2)
 
 train_ds = lgb.Dataset(TRAIN_feat, label = TRAIN_y) 
 test_ds = lgb.Dataset(TEST_feat, label = TEST_y) 
@@ -61,9 +61,21 @@ regr.score(TEST_feat, TEST_y)
 regr.feature_importances_
 #%%
 from sklearn import tree
-# fig, axes = plt.subplots(nrows = 1,ncols = 1,figsize = (4,4), dpi=800)
+fig, axes = plt.subplots(nrows = 1,ncols = 1,figsize = (8,6), dpi=300)
 tree.plot_tree(regr.estimators_[0],
                filled = True);
+# plt.savefig('./Figs/Decisiontree.png')
+
 
 #%%
-TEST_simple=np.where(TEST_feat[:,6]<=0.206,1,0)
+TEST_simple=np.where(TEST_feat[:,31]<=0.06,0,1)
+
+#%%
+plt.plot(TEST_y)
+plt.plot(TEST_simple)
+
+#%%
+fig, axes = plt.subplots(nrows=1,ncols=2, figsize=(8,6),dpi=300)
+axes[0].plot(TRAIN_feat[:,6])
+axes[1].plot(TEST_feat[:,6])
+plt.savefig('./Figs/Ch7_value.png')

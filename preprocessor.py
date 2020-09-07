@@ -58,33 +58,55 @@ with open('F:/ie_diagnosis/SCALERS.pickle','wb') as f:
 TRAIN_MSLB = sorted(glob.glob('F:/ie_diagnosis/DATA/TRAIN/MSLB/*'))
 TRAIN_SGTR = sorted(glob.glob('F:/ie_diagnosis/DATA/TRAIN/SGTR/*'))
 SGTR = []
-for i, file in tqdm.tqdm(enumerate(TRAIN_SGTR)):
-    temp = np.load(file)[:3600:5,:]
-    SGTR.append(temp)
+for i,file in tqdm.tqdm(enumerate(TRAIN_SGTR)):
+    temp = np.load(file)[:3600,:]
+    start = np.where(temp[...,0]<=50.0)[0][0]
+    temp_after_trip = temp[start:start+900,...]
+    SGTR.append(temp_after_trip)
 SGTR = np.array(SGTR)
-
 MSLB = []
-for i, file in tqdm.tqdm(enumerate(TRAIN_MSLB)):
-    temp = np.load(file)[:3600:5,:]
-    MSLB.append(temp)
-MSLB = np.array(MSLB)
-np.savez('./DATA/Train_minmax',MSLB=MSLB,SGTR=SGTR)
+for i,file in tqdm.tqdm(enumerate(TRAIN_MSLB)):
+    temp = np.load(file)[:3600,:]
+    start = np.where(temp[...,0]<=50.0)[0][0]
+    temp_after_trip = temp[start:start+900,...]
+    MSLB.append(temp_after_trip)
+MSLB=np.array(MSLB)
+np.savez('./DATA/Train_v2',MSLB=MSLB,SGTR=SGTR)
+
+# Deprecated
+# Create data using all sequence 
+# SGTR = []
+# for i, file in tqdm.tqdm(enumerate(TRAIN_SGTR)):
+#     temp = np.load(file)[:3600:5,:]
+#     SGTR.append(temp)
+# SGTR = np.array(SGTR)
+
+# MSLB = []
+# for i, file in tqdm.tqdm(enumerate(TRAIN_MSLB)):
+#     temp = np.load(file)[:3600:5,:]
+#     MSLB.append(temp)
+# MSLB = np.array(MSLB)
 
 #%%
 TEST_MSLB = sorted(glob.glob('F:/ie_diagnosis/DATA/TEST/MSLB/*'))
 TEST_SGTR = sorted(glob.glob('F:/ie_diagnosis/DATA/TEST/SGTR/*'))
+
 SGTR = []
 for i, file in tqdm.tqdm(enumerate(TEST_SGTR)):
-    temp = np.load(file)[:3600:5,:]
-    SGTR.append(temp)
+    temp = np.load(file)[:3600,:]
+    start = np.where(temp[...,0]<=50.0)[0][0]
+    temp_after_trip = temp[start:start+900,...]
+    SGTR.append(temp_after_trip)
 SGTR = np.array(SGTR)
 
 MSLB = []
 for i, file in tqdm.tqdm(enumerate(TEST_MSLB)):
-    temp = np.load(file)[:3600:5,:]
-    MSLB.append(temp)
+    temp = np.load(file)[:3600,:]
+    start = np.where(temp[...,0]<=50.0)[0][0]
+    temp_after_trip = temp[start:start+900,...]
+    MSLB.append(temp_after_trip)
 MSLB = np.array(MSLB)
-np.savez('./DATA/Test',MSLB=MSLB,SGTR=SGTR)
+np.savez('./DATA/Test_v2',MSLB=MSLB,SGTR=SGTR)
 #%%
 TRAIN=np.load('./DATA/Train.npz')
 TEST = np.load('./DATA/Test.npz')
