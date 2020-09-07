@@ -58,11 +58,21 @@ model3.evaluate(TEST[:,:900,...],TEST_y)
 plt.pcolor(TRAIN[60000,...].T)
 
 #%%
+fpr_1, tpr_1, threshold_1 = roc_curve(TEST_y,model1.predict(TEST[:,:300,:]))
+fpr_2, tpr_2, threshold_2 = roc_curve(TEST_y,model2.predict(TEST[:,:600,:]))
+fpr_3, tpr_3, threshold_3 = roc_curve(TEST_y,model3.predict(TEST[:,:900,:]))
 
-fpr, tpr, threshold = roc_curve(TEST_y,TEST_y_hat)
-roc_auc = auc(fpr,tpr)
-plt.plot(fpr, tpr, color='darkorange',
-         lw=2, label='AUC = %0.4f' % roc_auc)
+roc_auc_1 = auc(fpr_1,tpr_1)
+roc_auc_2 = auc(fpr_2,tpr_2)
+roc_auc_3 = auc(fpr_3,tpr_3)
+
+plt.plot(fpr_1, tpr_1, color='darkorange',
+         lw=2, label='AUC = %0.4f' % roc_auc_1)
+plt.plot(fpr_2, tpr_2, color='darkgreen',
+         lw=2, label='AUC = %0.4f' % roc_auc_2)
+plt.plot(fpr_3, tpr_3, color='darkblue',
+         lw=2, label='AUC = %0.4f' % roc_auc_3)
+
 # plt.plot(fpr_gan, tpr_gan, color='darkgreen',
 #          lw=2, label='GANomaly (AUC = %0.4f)' % roc_auc_gan)
 
