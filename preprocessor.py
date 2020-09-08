@@ -55,8 +55,8 @@ with open('F:/ie_diagnosis/SCALERS.pickle','wb') as f:
     pickle.dump(SCALERS,f)
 #%% 
 # Below codes are used for creating train/test data
-TRAIN_MSLB = sorted(glob.glob('F:/ie_diagnosis/DATA/TRAIN/MSLB/*'))
-TRAIN_SGTR = sorted(glob.glob('F:/ie_diagnosis/DATA/TRAIN/SGTR/*'))
+TRAIN_MSLB = sorted(glob.glob('D:/ie_diagnosis/DATA/TRAIN/MSLB/*'))
+TRAIN_SGTR = sorted(glob.glob('D:/ie_diagnosis/DATA/TRAIN/SGTR/*'))
 SGTR = []
 for i,file in tqdm.tqdm(enumerate(TRAIN_SGTR)):
     temp = np.load(file)[:3600,:]
@@ -88,8 +88,8 @@ np.savez('./DATA/Train_v2',MSLB=MSLB,SGTR=SGTR)
 # MSLB = np.array(MSLB)
 
 #%%
-TEST_MSLB = sorted(glob.glob('F:/ie_diagnosis/DATA/TEST/MSLB/*'))
-TEST_SGTR = sorted(glob.glob('F:/ie_diagnosis/DATA/TEST/SGTR/*'))
+TEST_MSLB = sorted(glob.glob('D:/ie_diagnosis/DATA/TEST/MSLB/*'))
+TEST_SGTR = sorted(glob.glob('D:/ie_diagnosis/DATA/TEST/SGTR/*'))
 
 SGTR = []
 for i, file in tqdm.tqdm(enumerate(TEST_SGTR)):

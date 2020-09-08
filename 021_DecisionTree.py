@@ -1,5 +1,7 @@
 #%%
-import lightgbm as lgb
+#import lightgbm as lgb
+from sklearn.ensemble import RandomForestRegressor
+
 def reformulator(X):
     X_reform = []
     for index, value in enumerate(X):
@@ -9,7 +11,6 @@ def reformulator(X):
     return(np.array(X_reform))    
 
 #%%
-from sklearn.ensemble import RandomForestRegressor
 TR_X_feat1 = reformulator(TR_X[:,:300,:])
 TR_X_feat2 = reformulator(TR_X[:,:600,:])
 TR_X_feat3 = reformulator(TR_X[:,:900,:])
@@ -36,19 +37,26 @@ tree.plot_tree(DcsTree_3.estimators_[0],
                filled = True);
 # plt.savefig('./Figs/Decisiontree.png')
 #%%
-fig, axes = plt.subplots(nrows=1,ncols=2, figsize=(8,6),dpi=300)
-plt.subplot(2,1,1)
-for f in RAW_TRAIN['MSLB']:
-    plt.subplot(2,1,1)
-    plt.plot(f[:,6])
-    plt.title('MSLB_TRAIN #7')
-for f in RAW_TEST['MSLB']:
-    plt.subplot(2,1,2)
-    plt.plot(f[:,6])
-    plt.title('MSLB_TEST #7')
-plt.tight_layout()
-plt.savefig('./Figs/MSLB_Ch7.png')
-
+for i in range(19):
+    for f in RAW_TRAIN['MSLB']:
+        plt.subplot(2,2,1)
+        plt.plot(f[:,i])
+        plt.title('MSLB_TRAIN #{}'.format(i))
+    for f in RAW_TEST['MSLB']:
+        plt.subplot(2,2,2)
+        plt.plot(f[:,i])
+        plt.title('MSLB_TEST #{}'.format(i))
+    for f in RAW_TRAIN['SGTR']:
+        plt.subplot(2,2,3)
+        plt.plot(f[:,i])
+        plt.title('SGTR_TRAIN #{}'.format(i))
+    for f in RAW_TEST['SGTR']:
+        plt.subplot(2,2,4)
+        plt.plot(f[:,i])
+        plt.title('SGTR_TEST #{}'.format(i))
+    plt.tight_layout()
+    plt.savefig('./Figs/MSLB_Ch{}.png'.format(i))
+#%%
 
 [RAW_TRAIN['MSLB'],RAW_TRAIN['SGTR']
 #%%

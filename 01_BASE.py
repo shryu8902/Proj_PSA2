@@ -18,7 +18,7 @@ TEST = np.concatenate([RAW_TEST['MSLB'],RAW_TEST['SGTR']])
 TEST_y = np.concatenate([np.ones(len(RAW_TEST['MSLB'])),np.zeros(len(RAW_TEST['SGTR']))]) # 1 : MSLB, 0 : SGTR
 print('Read in {}'.format(time.time()-past))
 #%% Data Normalization
-with open('F:/ie_diagnosis/SCALERS.pickle','rb') as f:
+with open('D:/ie_diagnosis/SCALERS.pickle','rb') as f:
     SCALERS=pickle.load(f)
 for index, values in tqdm.tqdm(enumerate(TRAIN)):
     TRAIN[index,...] = SCALERS['minmax'].transform(values)
@@ -39,6 +39,8 @@ def base_model(inp_shape):
 
 #%%
 # Case 1 : 300
+# Case 2 : 600
+# Case 3 : 900
 # TRAIN2 = np.delete(TRAIN,6,2)
 # TEST2 =np.delete(TEST,6,2)
 TR_X,VAL_X, TR_Y, VAL_Y = train_test_split(TRAIN, TRAIN_y, test_size=0.2, random_state=0)
@@ -46,6 +48,7 @@ TR_X,VAL_X, TR_Y, VAL_Y = train_test_split(TRAIN, TRAIN_y, test_size=0.2, random
 model1 = base_model((300,19))
 model2 = base_model((600,19))
 model3 = base_model((900,19))
+
 history1 = model1.fit(TR_X[:,:300,...],TR_Y, validation_data=(VAL_X[:,:300,...],VAL_Y), epochs = 10, batch_size = 64)
 history2 = model2.fit(TR_X[:,:600,...],TR_Y, validation_data=(VAL_X[:,:600,...],VAL_Y), epochs = 10, batch_size = 64)
 history3 = model3.fit(TR_X[:,:900,...],TR_Y, validation_data=(VAL_X[:,:900,...],VAL_Y), epochs = 10, batch_size = 64)
@@ -84,3 +87,4 @@ plt.ylabel('True Positive Rate')
 plt.title('ROC curve')
 plt.legend(loc="lower right")
 plt.grid(True)
+plt.savefig('./ROCURVE.png')
