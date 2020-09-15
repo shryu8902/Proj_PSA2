@@ -53,6 +53,17 @@ for file in tqdm.tqdm(All_list):
 
 with open('F:/ie_diagnosis/SCALERS.pickle','wb') as f:
     pickle.dump(SCALERS,f)
+#%%
+MSLB_add_list = sorted(glob.glob('F:/ie_diagnosis/MSLB_Additional_csv/*.csv'))
+SGTR_add_list = sorted(glob.glob('F:/ie_diagnosis/SGTR_Additional_csv/*.csv'))
+All_add_list = MSLB_add_list + SGTR_add_list
+ClassLabel = np.concatenate([np.ones(np.shape(MSLB_add_list)),np.zeros(np.shape(SGTR_add_list))]) # 1 : MSLB, 0 : SGTR
+Train_list, Test_list = train_test_split(All_add_list, test_size = 10000, random_state = SEED, stratify = ClassLabel)
+
+with open('F:/ie_diagnosis_add/train_test.pickle','wb') as f:
+    train_test_list = {'Train':Train_list, 'Test':Test_list}
+    pickle.dump(train_test_split,f)
+
 #%% 
 # Below codes are used for creating train/test data
 TRAIN_MSLB = sorted(glob.glob('D:/ie_diagnosis/DATA/TRAIN/MSLB/*'))
