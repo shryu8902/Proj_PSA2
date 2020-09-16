@@ -1,4 +1,6 @@
 #%%
+import os
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 import numpy as np
 import pandas as pd
 import config as cfg
@@ -224,3 +226,31 @@ TEST_SGTR_Class = tf.one_hot([2 if x == 1 else 3 if x==2 else 4 for x in CODE_in
 
 np.savez('./DATA/TRAIN_class',MSLB=TRAIN_MSLB_Class,SGTR=TRAIN_SGTR_Class)
 np.savez('./DATA/TEST_class',MSLB=TEST_MSLB_Class,SGTR=TEST_SGTR_Class)
+
+#%%
+############        F O R       A D I T I O N A L       D A T A             ####################
+############       Create label data by pair of event type & LOCA size      ####################
+
+MSLB_inputs = np.array(pd.read_csv('D:/ie_diagnosis_add/ie_input_addmslb.csv',header=None))
+SGTR_inputs = np.array(pd.read_csv('D:/ie_diagnosis_add/ie_input_addsgtr.csv',header=None))
+
+TRAIN_MSLB = sorted(glob.glob('D:/ie_diagnosis_add/DATA/TRAIN/MSLB/*'))
+file_index = [int(re.search('Run-(.*?).npy', x).group(1))-1 for x in TRAIN_MSLB]
+TRAIN_MSLB_Class = tf.one_hot([0 if x == 1 else 1 if x==2 else 3 for x in MSLB_inputs[file_index,1]],5).numpy()
+
+TRAIN_SGTR = sorted(glob.glob('D:/ie_diagnosis_add/DATA/TRAIN/SGTR/*'))
+file_index = [int(re.search('Run-(.*?).npy', x).group(1))-1 for x in TRAIN_SGTR]
+TRAIN_SGTR_Class = tf.one_hot([2 if x == 1 else 3 if x==2 else 4 for x in SGTR_inputs[file_index,1]],5).numpy()
+
+TEST_MSLB = sorted(glob.glob('D:/ie_diagnosis_add/DATA/TEST/MSLB/*'))
+file_index = [int(re.search('Run-(.*?).npy', x).group(1))-1 for x in TEST_MSLB]
+TEST_MSLB_Class = tf.one_hot([0 if x == 1 else 1 if x==2 else 3 for x in MSLB_inputs[file_index,1]],5).numpy()
+
+TEST_SGTR = sorted(glob.glob('D:/ie_diagnosis_add/DATA/TEST/SGTR/*'))
+file_index = [int(re.search('Run-(.*?).npy', x).group(1))-1 for x in TEST_SGTR]
+TEST_SGTR_Class = tf.one_hot([2 if x == 1 else 3 if x==2 else 4 for x in SGTR_inputs[file_index,1]],5).numpy()
+
+np.savez('./DATA/TRAIN_add_class',MSLB=TRAIN_MSLB_Class,SGTR=TRAIN_SGTR_Class)
+np.savez('./DATA/TEST_add_class',MSLB=TEST_MSLB_Class,SGTR=TEST_SGTR_Class)
+
+
