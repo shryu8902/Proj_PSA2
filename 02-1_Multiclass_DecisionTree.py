@@ -11,9 +11,11 @@ def reformulator(X):
     return(np.array(X_reform))    
 
 #%%
-TR_X_feat1 = reformulator(TR_X[:,:300,:])
-TR_X_feat2 = reformulator(TR_X[:,:600,:])
-TR_X_feat3 = reformulator(TR_X[:,:900,:])
+history1 = model1.fit(TRAIN[TR_ind,:300,...],TRAIN_y[TR_ind,...], validation_data=(TRAIN[VAL_ind,:300,...],TRAIN_y[VAL_ind,...]), epochs=10, batch_size=64)
+
+TR_X_feat1 = reformulator(TRAIN[:,:300,:])
+# TR_X_feat2 = reformulator(TR_X[:,:600,:])
+# TR_X_feat3 = reformulator(TR_X[:,:900,:])
 #%%
 #Create Decision Tree
 DcsTree_1 = RandomForestRegressor(max_depth=10, random_state=0,n_estimators=1, bootstrap=False)
@@ -21,7 +23,7 @@ DcsTree_2 = RandomForestRegressor(max_depth=10, random_state=0,n_estimators=1, b
 DcsTree_3 = RandomForestRegressor(max_depth=10, random_state=0,n_estimators=1, bootstrap=False)
 
 #%%
-DcsTree_1.fit(TR_X_feat1,TR_Y)
+DcsTree_1.fit(TR_X_feat1,TRAIN_y)
 DcsTree_2.fit(TR_X_feat2,TR_Y)
 DcsTree_3.fit(TR_X_feat3,TR_Y)
 
@@ -33,7 +35,7 @@ DcsTree_3.score(reformulator(TEST[:,:900,:]),TEST_y)
 #%%
 from sklearn import tree
 fig, axes = plt.subplots(nrows = 1,ncols = 1,figsize = (8,6), dpi=300)
-tree.plot_tree(DcsTree_3.estimators_[0],
+tree.plot_tree(DcsTree_1.estimators_[0],
                filled = True);
 # plt.savefig('./Figs/Decisiontree.png')
 #%%

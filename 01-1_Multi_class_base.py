@@ -38,7 +38,7 @@ TEST_y = np.concatenate([RAW_TEST_label['MSLB'],RAW_TEST_add_label['MSLB'],RAW_T
 del(RAW_TRAIN,RAW_TRAIN_add,RAW_TRAIN_label, RAW_TRAIN_add_label,RAW_TEST,RAW_TEST_add,RAW_TEST_add_label,RAW_TEST_label)
 print('Read in {}'.format(time.time()-past))
 #%% Data Normalization
-with open('D:/ie_diagnosis/SCALERS.pickle','rb') as f:
+with open('F:/ie_diagnosis/SCALERS.pickle','rb') as f:
     SCALERS=pickle.load(f)
 for index, values in tqdm.tqdm(enumerate(TRAIN)):
     TRAIN[index,...] = SCALERS['minmax'].transform(values)
@@ -72,6 +72,9 @@ model1 = base_model((300,19))
 # model3 = base_model((900,19))
 
 history1 = model1.fit(TRAIN[TR_ind,:300,...],TRAIN_y[TR_ind,...], validation_data=(TRAIN[VAL_ind,:300,...],TRAIN_y[VAL_ind,...]), epochs=10, batch_size=64)
+
+
+
 history1 = model1.fit(TR_X[:,:300,...],TR_Y, validation_data=(VAL_X[:,:300,...],VAL_Y), epochs = 10, batch_size = 64)
 # history2 = model2.fit(TR_X[:,:600,...],TR_Y, validation_data=(VAL_X[:,:600,...],VAL_Y), epochs = 10, batch_size = 64)
 # history3 = model3.fit(TR_X[:,:900,...],TR_Y, validation_data=(VAL_X[:,:900,...],VAL_Y), epochs = 10, batch_size = 64)
