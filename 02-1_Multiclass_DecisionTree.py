@@ -23,7 +23,7 @@ DcsTree_2 = RandomForestRegressor(max_depth=10, random_state=0,n_estimators=1, b
 DcsTree_3 = RandomForestRegressor(max_depth=10, random_state=0,n_estimators=1, bootstrap=False)
 
 #%%
-DcsTree_1.fit(TR_X_feat1,TRAIN_y)
+DcsTree_1.fit(TR_X_feat1[TR_ind,...],TRAIN_y[TR_ind,...])
 DcsTree_2.fit(TR_X_feat2,TR_Y)
 DcsTree_3.fit(TR_X_feat3,TR_Y)
 
@@ -35,7 +35,7 @@ DcsTree_3.score(reformulator(TEST[:,:900,:]),TEST_y)
 #%%
 from sklearn import tree
 fig, axes = plt.subplots(nrows = 1,ncols = 1,figsize = (8,6), dpi=300)
-tree.plot_tree(DcsTree_1.estimators_[0],
+tree.plot_tree(DcsTree_1.estimators_[1],
                filled = True);
 # plt.savefig('./Figs/Decisiontree.png')
 #%%
