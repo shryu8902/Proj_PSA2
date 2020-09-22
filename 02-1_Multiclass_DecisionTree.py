@@ -1,6 +1,6 @@
 #%%
 #import lightgbm as lgb
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import RandomForestClassifier
 
 def reformulator(X):
     X_reform = []
@@ -9,29 +9,41 @@ def reformulator(X):
         x_std = np.mean(value,axis=0)
         X_reform.append(np.concatenate([x_mean,x_std]))
     return(np.array(X_reform))    
+def sampler(X):
+    temp = X[:,::10,...]
+    X_shape = temp.shape    
+    return(temp.reshape((X_shape[0],-1)))
 
 #%%
-history1 = model1.fit(TRAIN[TR_ind,:300,...],TRAIN_y[TR_ind,...], validation_data=(TRAIN[VAL_ind,:300,...],TRAIN_y[VAL_ind,...]), epochs=10, batch_size=64)
-
 TR_X_feat1 = reformulator(TRAIN[:,:300,:])
-# TR_X_feat2 = reformulator(TR_X[:,:600,:])
-# TR_X_feat3 = reformulator(TR_X[:,:900,:])
+TR_X_feat2 = reformulator(TRAIN[:,:600,:])
+TR_X_feat3 = reformulator(TRAIN[:,:900,:])
+TR_X_feat1 = sampler(TRAIN[:,:300,:])
+TR_X_feat2 = sampler(TRAIN[:,:600,:])
+TR_X_feat3 = sampler(TRAIN[:,:900,:])
+
 #%%
 #Create Decision Tree
-DcsTree_1 = RandomForestRegressor(max_depth=10, random_state=0,n_estimators=1, bootstrap=False)
-DcsTree_2 = RandomForestRegressor(max_depth=10, random_state=0,n_estimators=1, bootstrap=False)
-DcsTree_3 = RandomForestRegressor(max_depth=10, random_state=0,n_estimators=1, bootstrap=False)
+DcsTree_1 = RandomForestClassifier(max_depth=10, random_state=0,n_estimators=10, bootstrap=True)
+DcsTree_2 = RandomForestClassifier(max_depth=10, random_state=0,n_estimators=10, bootstrap=True)
+DcsTree_3 = RandomForestClassifier(max_depth=10, random_state=0,n_estimators=10, bootstrap=True)
 
 #%%
-DcsTree_1.fit(TR_X_feat1[TR_ind,...],TRAIN_y[TR_ind,...])
-DcsTree_2.fit(TR_X_feat2,TR_Y)
-DcsTree_3.fit(TR_X_feat3,TR_Y)
+DcsTree_1.fit(TRAIN[:,300,...]-TRAIN[:,295,...],np.argmax(TRAIN_y,axis=1))
+DcsTree_1.fit(TRAIN[:,600,...],np.argmax(TRAIN_y,axis=1))
+DcsTree_1.fit(TRAIN[:,899,...],np.argmax(TRAIN_y,axis=1))
+
+DcsTree_2.fit(TR_X_feat2,np.argmax(TRAIN_y,axis=1))
+DcsTree_3.fit(TR_X_feat3,np.argmax(TRAIN_y,axis=1))
 
 #%%
 # ALL TREE IS 100% ACCURATE!!
-DcsTree_1.score(reformulator(TEST[:,:300,:]),TEST_y)
-DcsTree_2.score(reformulator(TEST[:,:600,:]),TEST_y)
-DcsTree_3.score(reformulator(TEST[:,:900,:]),TEST_y)
+DcsTree_1.score(TEST[:,300,:]-TEST[:,295,:],np.argmax(TEST_y,axis=1))
+DcsTree_1.score(TEST[:,600,:],np.argmax(TEST_y,axis=1))
+DcsTree_1.score(TEST[:,899,:],np.argmax(TEST_y,axis=1))
+
+DcsTree_2.score(sampler(TEST[:,:600,:]),np.argmax(TEST_y,axis=1))
+DcsTree_3.score(sampler(TEST[:,:900,:]),np.argmax(TEST_y,axis=1))
 #%%
 from sklearn import tree
 fig, axes = plt.subplots(nrows = 1,ncols = 1,figsize = (8,6), dpi=300)

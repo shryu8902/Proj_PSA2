@@ -9,17 +9,24 @@ import tqdm, glob, pickle, datetime, re, time
 import matplotlib.pyplot as plt
 from sklearn.metrics import roc_curve, precision_recall_curve, auc
 from sklearn.model_selection import train_test_split
+import tensorflow.keras.backend as K
+from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau
+import gc
+def ensure_dir(file_path):
+    directory = os.path.dirname(file_path)
+    if not os.path.exists(directory):
+        os.makedirs(directory)
 
 #%%
 # Read training/test data
 past = time.time()
-RAW_TRAIN = np.load('./DATA/Train_v2.npz')
-RAW_TEST = np.load('./DATA/Test_v2.npz')
+RAW_TRAIN = np.load('./DATA/Train_v3.npz')
+RAW_TEST = np.load('./DATA/Test_v3.npz')
 RAW_TRAIN_label = np.load('./DATA/TRAIN_class.npz')
 RAW_TEST_label = np.load('./DATA/TEST_class.npz')
 
-RAW_TRAIN_add = np.load('./DATA/Train_add_v2.npz')
-RAW_TEST_add = np.load('./DATA/Test_add_v2.npz')
+RAW_TRAIN_add = np.load('./DATA/Train_add_v3.npz')
+RAW_TEST_add = np.load('./DATA/Test_add_v3.npz')
 RAW_TRAIN_add_label = np.load('./DATA/TRAIN_add_class.npz')
 RAW_TEST_add_label = np.load('./DATA/TEST_add_class.npz')
 
@@ -47,16 +54,33 @@ for index, values in tqdm.tqdm(enumerate(TEST)):
 #%%
 def base_model(inp_shape):         
     model = tf.keras.models.Sequential()
-    model.add(tf.keras.layers.Conv1D(64,3,strides=2,activation='selu',input_shape=inp_shape))
-    model.add(tf.keras.layers.Dropout(0.2))
-    model.add(tf.keras.layers.Conv1D(64,3,strides=2,activation='selu'))
-    model.add(tf.keras.layers.Dropout(0.2))
-    model.add(tf.keras.layers.Conv1D(128,3,strides=2,activation='selu'))
-    model.add(tf.keras.layers.GlobalAveragePooling1D())
+    model.add(tf.keras.layers.Conv1D(128,3,strides=3,input_shape=inp_shape))
+    model.add(tf.keras.layers.BatchNormalization())
+    model.add(tf.keras.layers.LeakyReLU())
+    model.add(tf.keras.layers.Conv1D(64,3,strides=3))
+    model.add(tf.keras.layers.BatchNormalization())
+    model.add(tf.keras.layers.LeakyReLU())
+    model.add(tf.keras.layers.Conv1D(64,3,strides=3))
+    model.add(tf.keras.layers.LeakyReLU())
+    model.add(tf.keras.layers.Flatten())
+    model.add(tf.keras.layers.Dense(64,activation='selu'))
+    model.add(tf.keras.layers.Dropout(0.4))
     model.add(tf.keras.layers.Dense(5,activation='softmax'))
     model.compile(optimizer='adam',loss = 'categorical_crossentropy', metrics=['accuracy'])
     return model
-
+#%%
+def base_model(inp_shape):
+    model = tf.keras.models.Sequential()
+    model.add(tf.keras.layers.Conv1D(64,3,strides=3,activation='relu',input_shape=inp_shape))
+    model.add(tf.keras.layers.Dropout(0.2))
+    model.add(tf.keras.layers.Conv1D(64,3,strides=3,activation='relu'))
+    model.add(tf.keras.layers.Dropout(0.2))
+    model.add(tf.keras.layers.Conv1D(128,3,strides=3,activation='relu'))
+    model.add(tf.keras.layers.GlobalAveragePooling1D())
+    model.add(tf.keras.layers.Dense(64,activation='selu'))
+    model.add(tf.keras.layers.Dense(5,activation='softmax'))
+    model.compile(optimizer='adam',loss = 'categorical_crossentropy', metrics=['accuracy'])
+    return model
 #%%
 # Case 1 : 300
 # Case 2 : 600
@@ -66,20 +90,51 @@ def base_model(inp_shape):
 index=[x for x in range(len(TRAIN))]
 TR_ind, VAL_ind = train_test_split(index, test_size=0.2, random_state=0)
 # TR_X,VAL_X, TR_Y, VAL_Y = train_test_split(TRAIN, TRAIN_y, test_size=0.2, random_state=0)
+losses = pd.DataFrame()
+#%%
+for i in [300,600,900]:
+    model = base_model((i,19))
+    ensure_dir('./Model/base_3{}'.format(i))
+    path = './Model/base_3{}'.format(i) + '/base{epoch:04d}.ckpt'
+    checkpoint = ModelCheckpoint(path, monitor = 'val_loss',verbose = 1,
+                save_best_only = True,
+                mode = 'auto',
+                save_weights_only = True)
+    reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.8, patience=5, min_lr=1e-5)
+    early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
+    hist=model.fit(TRAIN[TR_ind,:i,...],TRAIN_y[TR_ind,],
+               validation_data=(TRAIN[VAL_ind,:i,...],TRAIN_y[VAL_ind,]),
+               callbacks=[checkpoint,reduce_lr,early_stopping],epochs=100,batch_size=256)
+    # hist = model.fit(TRAIN[...,:i], TRAIN_y[...,],
+    #                 validation_data=(TRAIN[VAL_ind,:i,...],TRAIN_y[VAL_ind,]),
+    #                 epochs=50,callbacks=[checkpoint,early_stopping], batch_size=256)
+    with open('./Model/base_act3{}/hist.pkl'.format(i), 'wb') as f:
+          pickle.dump(hist.history,f)
+    del(hist)
+    TR_l, TR_a = model.evaluate(TRAIN[TR_ind,:i,...],TRAIN_y[TR_ind,],  batch_size = 16)
+    VA_l, VA_a = model.evaluate(TRAIN[VAL_ind,:i,...],TRAIN_y[VAL_ind,], batch_size = 256)
+    TE_l, TE_a = model.evaluate(TEST[:,:i,...],TEST_y,batch_size=256)
+    K.clear_session()
+    del(model)
+    losses = losses.append({'SEC': i, 'TR_loss': TR_l, 'TR_acc': TR_a, 'VAL_loss': VA_l,
+                    'VAL_acc':VA_a,'TEST_loss':TE_l,'TEST_acc':TE_a}, ignore_index=True)
+    gc.collect()
+    gc.enable()
+#%%
+with open('./Model/base_3.pkl','wb') as f:
+    pickle.dump(losses,f)
+#%%
+with open('./Model/base_act3.pkl','rb') as f:
+    losses = pickle.load(f)
+#%%
 
-model1 = base_model((300,19))
 # model2 = base_model((600,19))
 # model3 = base_model((900,19))
-
-history1 = model1.fit(TRAIN[TR_ind,:300,...],TRAIN_y[TR_ind,...], validation_data=(TRAIN[VAL_ind,:300,...],TRAIN_y[VAL_ind,...]), epochs=10, batch_size=64)
-
-
 
 history1 = model1.fit(TR_X[:,:300,...],TR_Y, validation_data=(VAL_X[:,:300,...],VAL_Y), epochs = 10, batch_size = 64)
 # history2 = model2.fit(TR_X[:,:600,...],TR_Y, validation_data=(VAL_X[:,:600,...],VAL_Y), epochs = 10, batch_size = 64)
 # history3 = model3.fit(TR_X[:,:900,...],TR_Y, validation_data=(VAL_X[:,:900,...],VAL_Y), epochs = 10, batch_size = 64)
 
-model1.evaluate(TEST[:,:300,...],TEST_y)
 # model2.evaluate(TEST[:,:600,...],TEST_y)
 # model3.evaluate(TEST[:,:900,...],TEST_y)
 
