@@ -2,19 +2,66 @@
 #import lightgbm as lgb
 from sklearn.ensemble import RandomForestClassifier
 
-def reformulator(X):
+def reformulator(X,point=300):
     X_reform = []
-    for index, value in enumerate(X):
+    for index, value in enumerate(X[:,:point,:]):
         x_mean = np.mean(value,axis=0)
         x_std = np.mean(value,axis=0)
         X_reform.append(np.concatenate([x_mean,x_std]))
-    return(np.array(X_reform))    
-def sampler(X):
-    temp = X[:,::10,...]
+    return(np.array(X_reform))
+def Point(X,point=300):
+    return(X[:,point-1,:])
+def Slope(X,point=300):
+    return(X[:,point-1,:]-X[:,point-6,:])
+def PointSlope(X,point=300):
+    p = Point(X,point)
+    s = Slope(X,point)
+    return(np.concatenate([p,s],axis=1))
+def sampler(X,point=300):
+    temp = X[:,:point:10,...]
     X_shape = temp.shape    
     return(temp.reshape((X_shape[0],-1)))
 
 #%%
+losses = pd.DataFrame()
+#%%
+for i in tqdm.tqdm([300,600,900]):    
+    model = RandomForestClassifier(max_depth=10, random_state=0, n_estimators=1)
+    model.fit(Point(TRAIN,i),np.argmax(TRAIN_y,axis=1))
+    TR_a = model.score(Point(TRAIN,i),np.argmax(TRAIN_y,axis=1))
+    TE_a = model.score(Point(TEST,i),np.argmax(TEST_y,axis=1))
+    losses=losses.append({'SEC':i,'Feature':'point','TR_acc':TR_a, 'TE_acc':TE_a},ignore_index=True)
+    del model
+for i in tqdm.tqdm([300,600,900]):    
+    model = RandomForestClassifier(max_depth=10, random_state=0, n_estimators=1)
+    model.fit(Slope(TRAIN,i),np.argmax(TRAIN_y,axis=1))
+    TR_a = model.score(Slope(TRAIN,i),np.argmax(TRAIN_y,axis=1))
+    TE_a = model.score(Slope(TEST,i),np.argmax(TEST_y,axis=1))
+    losses=losses.append({'SEC':i,'Feature':'slope','TR_acc':TR_a, 'TE_acc':TE_a},ignore_index=True)
+    del model
+for i in tqdm.tqdm([300,600,900]):    
+    model = RandomForestClassifier(max_depth=10, random_state=0, n_estimators=1)
+    model.fit(PointSlope(TRAIN,i),np.argmax(TRAIN_y,axis=1))
+    TR_a = model.score(PointSlope(TRAIN,i),np.argmax(TRAIN_y,axis=1))
+    TE_a = model.score(PointSlope(TEST,i),np.argmax(TEST_y,axis=1))
+    losses=losses.append({'SEC':i,'Feature':'point_slope','TR_acc':TR_a, 'TE_acc':TE_a},ignore_index=True)
+    del model
+for i in tqdm.tqdm([300,600,900]):    
+    model = RandomForestClassifier(max_depth=10, random_state=0, n_estimators=1)
+    model.fit(reformulator(TRAIN,i),np.argmax(TRAIN_y,axis=1))
+    TR_a = model.score(reformulator(TRAIN,i),np.argmax(TRAIN_y,axis=1))
+    TE_a = model.score(reformulator(TEST,i),np.argmax(TEST_y,axis=1))
+    losses=losses.append({'SEC':i,'Feature':'mean_var','TR_acc':TR_a, 'TE_acc':TE_a},ignore_index=True)
+    del model
+for i in tqdm.tqdm([300,600,900]):    
+    model = RandomForestClassifier(max_depth=10, random_state=0, n_estimators=1)
+    model.fit(sampler(TRAIN,i),np.argmax(TRAIN_y,axis=1))
+    TR_a = model.score(sampler(TRAIN,i),np.argmax(TRAIN_y,axis=1))
+    TE_a = model.score(sampler(TEST,i),np.argmax(TEST_y,axis=1))
+    losses=losses.append({'SEC':i,'Feature':'sampler','TR_acc':TR_a, 'TE_acc':TE_a},ignore_index=True)
+    del model
+#%%
+
 TR_X_feat1 = reformulator(TRAIN[:,:300,:])
 TR_X_feat2 = reformulator(TRAIN[:,:600,:])
 TR_X_feat3 = reformulator(TRAIN[:,:900,:])
